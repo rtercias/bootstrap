@@ -376,7 +376,7 @@ describe('datepicker', function() {
 
       it('shows the label row & the correct day labels', function() {
         expect(getLabelsRow().css('display')).not.toBe('none');
-        expect(getLabels(true)).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+        expect(getLabels(true)).toEqual(['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']);
       });
 
       it('renders the calendar days correctly', function() {

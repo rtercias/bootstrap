@@ -95,7 +95,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
         } else if (angular.isNumber(datepickerConfig.startingDay)) {
           self.startingDay = datepickerConfig.startingDay;
         } else {
-          self.startingDay = ($locale.DATETIME_FORMATS.FIRSTDAYOFWEEK + 8) % 7;
+          self.startingDay = (($locale.DATETIME_FORMATS.FIRSTDAYOFWEEK + 8) % 7);
         }
 
         break;
@@ -187,6 +187,8 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       if (ngModelCtrl.$viewValue instanceof JSJoda.LocalDate) {
         var date = ngModelCtrl.$viewValue;
         this.activeDate = date;
+      } else {
+        throw new Error('Invalid date');
       }
     } catch (e) {
       if (!$datepickerSuppressError) {
@@ -409,13 +411,13 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       month = this.activeDate.month(),
       firstDayOfMonth = this.activeDate.withDayOfMonth(1);
 
-    var difference = this.startingDay - firstDayOfMonth.dayOfMonth(),
+    var difference = this.startingDay - firstDayOfMonth.dayOfWeek().value(),
       numDisplayedFromPreviousMonth = difference > 0 ?
         7 - difference : - difference,
       firstDate = firstDayOfMonth;
 
     if (numDisplayedFromPreviousMonth > 0) {
-      firstDate = firstDate.minusDays(numDisplayedFromPreviousMonth + 1);
+      firstDate = firstDate.minusDays(numDisplayedFromPreviousMonth);
     }
 
     // 42 is the number of days on a six-week calendar
