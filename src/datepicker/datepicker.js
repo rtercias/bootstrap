@@ -218,7 +218,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     var time = date.compareTo(today);
     var dt = {
       date: date,
-      label: dateParser.filter(date, format),
+      label: getLabel(date, format),
       selected: model && date.compareTo(model) === 0,
       disabled: this.isDisabled(date),
       past: time < 0,
@@ -377,6 +377,14 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     }
 
     return ngModelOptions;
+  }
+
+  function getLabel(date, format) {
+    if (format === this.formatMonth) {
+      return date.month().name();
+    }
+    
+    return date.format(JSJoda.DateTimeFormatter.ofPattern(format));
   }
 }])
 
