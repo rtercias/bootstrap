@@ -7,7 +7,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 .constant('uibDatepickerConfig', {
   datepickerMode: 'day',
   formatDay: 'dd',
-  formatMonth: 'MMMM',
+  formatMonth: 'MM',
   formatYear: 'yyyy',
   formatDayHeader: 'EEE',
   formatDayTitle: 'MMMM yyyy',
@@ -95,7 +95,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
         } else if (angular.isNumber(datepickerConfig.startingDay)) {
           self.startingDay = datepickerConfig.startingDay;
         } else {
-          self.startingDay = (($locale.DATETIME_FORMATS.FIRSTDAYOFWEEK + 8) % 7);
+          self.startingDay = $locale.DATETIME_FORMATS.FIRSTDAYOFWEEK + 1;
         }
 
         break;
@@ -103,18 +103,10 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       case 'minDate':
         $scope.$watch('datepickerOptions.' + key, function(value) {
           if (value) {
-            if (angular.isDate(value)) {
-              self[key] = dateParser.fromTimezone(new Date(value), ngModelOptions.getOption('timezone'));
-            } else {
-              if ($datepickerLiteralWarning) {
-                $log.warn('Literal date support has been deprecated, please switch to date object usage');
-              }
-
-              self[key] = new Date(dateFilter(value, 'medium'));
-            }
+            self[key] = JSJoda.LocalDate.parse(value);
           } else {
             self[key] = datepickerConfig[key] ?
-              dateParser.fromTimezone(new Date(datepickerConfig[key]), ngModelOptions.getOption('timezone')) :
+              JSJoda.LocalDate.parse(datepickerConfig[key]) :
               null;
           }
 
@@ -227,6 +219,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       customClass: this.customClass(date) || null
     };
 
+
     if (model && date.compareTo(model) === 0) {
       $scope.selectedDt = dt;
     }
@@ -260,10 +253,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
   $scope.select = function(date) {
     if ($scope.datepickerMode === self.minMode) {
-      var dt = ngModelCtrl.$viewValue ? dateParser.fromTimezone(new Date(ngModelCtrl.$viewValue), ngModelOptions.getOption('timezone')) : new Date(0, 0, 0, 0, 0, 0, 0);
-      dt.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
-      dt = dateParser.toTimezone(dt, ngModelOptions.getOption('timezone'));
-      ngModelCtrl.$setViewValue(dt);
+      ngModelCtrl.$setViewValue(date);
       ngModelCtrl.$render();
     } else {
       self.activeDate = date;
@@ -276,9 +266,11 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
   };
 
   $scope.move = function(direction) {
-    var year = self.activeDate.getFullYear() + direction * (self.step.years || 0),
-        month = self.activeDate.getMonth() + direction * (self.step.months || 0);
-    self.activeDate.setFullYear(year, month, 1);
+    if (self.step.years) {
+      self.activeDate = self.activeDate.plusYears(direction);
+    } else if (self.step.months) {
+      self.activeDate = self.activeDate.plusMonths(direction).with(JSJoda.TemporalAdjusters.lastDayOfMonth());
+    }
     self.refreshView();
   };
 
@@ -291,7 +283,6 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     }
 
     setMode(self.modes[self.modes.indexOf($scope.datepickerMode) + direction]);
-
     $scope.$emit('uib:datepicker.mode');
   };
 
@@ -381,9 +372,8 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
   function getLabel(date, format) {
     if (format === this.formatMonth) {
-      return date.month().name();
+      return date.month().toString();
     }
-    
     return date.format(JSJoda.DateTimeFormatter.ofPattern(format));
   }
 }])
@@ -393,10 +383,6 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
   this.step = { months: 1 };
   this.element = $element;
-  function getDaysInMonth(year, month) {
-    return month === 1 && year % 4 === 0 &&
-      (year % 100 !== 0 || year % 400 === 0) ? 29 : DAYS_IN_MONTH[month];
-  }
 
   this.init = function(ctrl) {
     angular.extend(ctrl, this);
@@ -417,16 +403,18 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
   this._refreshView = function() {
     var year = this.activeDate.year(),
       month = this.activeDate.month(),
-      firstDayOfMonth = this.activeDate.withDayOfMonth(1);
-
-    var difference = this.startingDay - firstDayOfMonth.dayOfWeek().value(),
-      numDisplayedFromPreviousMonth = difference > 0 ?
-        7 - difference : - difference,
+      firstDayOfMonth = this.activeDate.withDayOfMonth(1),
       firstDate = firstDayOfMonth;
 
-    if (numDisplayedFromPreviousMonth > 0) {
-      firstDate = firstDate.minusDays(numDisplayedFromPreviousMonth);
+    if (this.startingDay > firstDayOfMonth.dayOfWeek().value()) {
+      // if firstDayOfMonth falls after the startingDay of the week, go back one week 
+      // Ex: '2010-09-01 falls on a Wednesday. If the designated startingDay of the week is 'Sunday',
+      // then we go back one week to find the "firstDate".
+      // This is necessary because JSJoda's ChronoField week counter start on Sundays 
+      firstDate = firstDayOfMonth.minusWeeks(1);
     }
+
+    firstDate = firstDate.with(JSJoda.ChronoField.DAY_OF_WEEK, this.startingDay);
 
     // 42 is the number of days on a six-week calendar
     var days = this.getDates(firstDate, 42);
@@ -436,7 +424,6 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
         secondary: days[i].month() !== month,
         uid: scope.uniqueId + '-' + i
       });
-
     }
 
     scope.labels = new Array(7);
@@ -463,24 +450,15 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
   };
 
   this.compare = function(date1, date2) {
-    var _date1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
-    var _date2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
-    _date1.setFullYear(date1.getFullYear());
-    _date2.setFullYear(date2.getFullYear());
-    return _date1 - _date2;
+    return date1.compareTo(date2);
   };
 
   function getISO8601WeekNumber(date) {
-    var checkDate = new Date(date);
-    checkDate.setDate(checkDate.getDate() + 4 - (checkDate.getDay() || 7)); // Thursday
-    var time = checkDate.getTime();
-    checkDate.setMonth(0); // Compare with Jan 1
-    checkDate.setDate(1);
-    return Math.floor(Math.round((time - checkDate) / 86400000) / 7) + 1;
+    return date.isoWeekOfWeekyear();
   }
 
   this.handleKeyDown = function(key, evt) {
-    var date = this.activeDate.getDate();
+    var date = this.activeDate.dayOfMonth();
 
     if (key === 'left') {
       date = date - 1;
@@ -491,22 +469,22 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     } else if (key === 'down') {
       date = date + 7;
     } else if (key === 'pageup' || key === 'pagedown') {
-      var month = this.activeDate.getMonth() + (key === 'pageup' ? - 1 : 1);
-      this.activeDate.setMonth(month, 1);
-      date = Math.min(getDaysInMonth(this.activeDate.getFullYear(), this.activeDate.getMonth()), date);
+      var month = this.activeDate.month() + (key === 'pageup' ? - 1 : 1);
+      this.activeDate = this.activeDate.withMonth(month).withDayOfMonth(1);
+      date = Math.min(this.activeDate.lengthOfMonth(), date);
     } else if (key === 'home') {
       date = 1;
     } else if (key === 'end') {
-      date = getDaysInMonth(this.activeDate.getFullYear(), this.activeDate.getMonth());
+      date = this.activeDate.lengthOfMonth();
     }
-    this.activeDate.setDate(date);
+    this.activeDate.withDayOfMonth(date);
   };
 }])
 
 .controller('UibMonthpickerController', ['$scope', '$element', 'dateFilter', function(scope, $element, dateFilter) {
   this.step = { years: 1 };
   this.element = $element;
-
+  
   this.init = function(ctrl) {
     angular.extend(ctrl, this);
     ctrl.refreshView();
@@ -518,29 +496,23 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
         date;
 
     for (var i = 0; i < 12; i++) {
-      date = this.activeDate;
-      date.withYear(year);
-
+      date = this.activeDate.withYear(year);
       months[i] = angular.extend(this.createDateObject(date, this.formatMonth), {
         uid: scope.uniqueId + '-' + i
       });
     }
 
-    scope.title = dateFilter(this.activeDate, this.formatMonthTitle); this.activeDate.month().name();
+    scope.title = this.activeDate.month().toString();
     scope.rows = this.split(months, this.monthColumns);
     scope.yearHeaderColspan = this.monthColumns > 3 ? this.monthColumns - 2 : 1;
   };
 
   this.compare = function(date1, date2) {
-    var _date1 = new Date(date1.getFullYear(), date1.getMonth());
-    var _date2 = new Date(date2.getFullYear(), date2.getMonth());
-    _date1.setFullYear(date1.getFullYear());
-    _date2.setFullYear(date2.getFullYear());
-    return _date1 - _date2;
+    return date1.compareTo(date2);
   };
 
   this.handleKeyDown = function(key, evt) {
-    var date = this.activeDate.getMonth();
+    var date = this.activeDate.month();
 
     if (key === 'left') {
       date = date - 1;
@@ -551,14 +523,14 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     } else if (key === 'down') {
       date = date + this.monthColumns;
     } else if (key === 'pageup' || key === 'pagedown') {
-      var year = this.activeDate.getFullYear() + (key === 'pageup' ? - 1 : 1);
-      this.activeDate.setFullYear(year);
+      var year = this.activeDate.year() + (key === 'pageup' ? - 1 : 1);
+      this.activeDate.withYear(year);
     } else if (key === 'home') {
       date = 0;
     } else if (key === 'end') {
       date = 11;
     }
-    this.activeDate.setMonth(date);
+    this.activeDate.withMonth(date);
   };
 }])
 
@@ -580,24 +552,22 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     var years = new Array(range), date;
 
     for (var i = 0, start = getStartingYear(this.activeDate.year()); i < range; i++) {
-      date = this.activeDate;
-      date.withYear(start + i);
+      date = this.activeDate.withYear(start + i);
       years[i] = angular.extend(this.createDateObject(date, this.formatYear), {
         uid: scope.uniqueId + '-' + i
       });
     }
-
     scope.title = [years[0].label, years[range - 1].label].join(' - ');
     scope.rows = this.split(years, columns);
     scope.columns = columns;
   };
 
   this.compare = function(date1, date2) {
-    return date1.getFullYear() - date2.getFullYear();
+    return date1.year() - date2.year();
   };
 
   this.handleKeyDown = function(key, evt) {
-    var date = this.activeDate.getFullYear();
+    var date = this.activeDate.year();
 
     if (key === 'left') {
       date = date - 1;
@@ -610,11 +580,11 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     } else if (key === 'pageup' || key === 'pagedown') {
       date += (key === 'pageup' ? - 1 : 1) * range;
     } else if (key === 'home') {
-      date = getStartingYear(this.activeDate.getFullYear());
+      date = getStartingYear(this.activeDate.year());
     } else if (key === 'end') {
-      date = getStartingYear(this.activeDate.getFullYear()) + range - 1;
+      date = getStartingYear(this.activeDate.year()) + range - 1;
     }
-    this.activeDate.setFullYear(date);
+    this.activeDate.withYear(date);
   };
 }])
 
