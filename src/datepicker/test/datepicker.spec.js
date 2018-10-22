@@ -500,10 +500,10 @@ describe('datepicker', function() {
 
         it('shows months as options', function() {
           expect(getOptions()).toEqual([
-            ['January', 'February', 'March'],
-            ['April', 'May', 'June'],
-            ['July', 'August', 'September'],
-            ['October', 'November', 'December']
+            ['JANUARY', 'FEBRUARY', 'MARCH'],
+            ['APRIL', 'MAY', 'JUNE'],
+            ['JULY', 'AUGUST', 'SEPTEMBER'],
+            ['OCTOBER', 'NOVEMBER', 'DECEMBER']
           ]);
         });
 
@@ -520,10 +520,10 @@ describe('datepicker', function() {
 
           expect(getTitle()).toBe('2009');
           expect(getOptions()).toEqual([
-            ['January', 'February', 'March'],
-            ['April', 'May', 'June'],
-            ['July', 'August', 'September'],
-            ['October', 'November', 'December']
+            ['JANUARY', 'FEBRUARY', 'MARCH'],
+            ['APRIL', 'MAY', 'JUNE'],
+            ['JULY', 'AUGUST', 'SEPTEMBER'],
+            ['OCTOBER', 'NOVEMBER', 'DECEMBER']
           ]);
 
           expectSelectedElement(null);
@@ -534,10 +534,10 @@ describe('datepicker', function() {
 
           expect(getTitle()).toBe('2011');
           expect(getOptions()).toEqual([
-            ['January', 'February', 'March'],
-            ['April', 'May', 'June'],
-            ['July', 'August', 'September'],
-            ['October', 'November', 'December']
+            ['JANUARY', 'FEBRUARY', 'MARCH'],
+            ['APRIL', 'MAY', 'JUNE'],
+            ['JULY', 'AUGUST', 'SEPTEMBER'],
+            ['OCTOBER', 'NOVEMBER', 'DECEMBER']
           ]);
 
           expectSelectedElement(null);
@@ -645,7 +645,7 @@ describe('datepicker', function() {
           it('will be able to activate next day', function() {
             triggerKeyDown(element, 'right');
             expect(getActiveLabel()).toBe('01');
-            expect(getTitle()).toBe('October 2010');
+            expect(getTitle()).toBe('OCTOBER 2010');
           });
 
           it('will be able to activate same day in previous week', function() {
@@ -656,25 +656,25 @@ describe('datepicker', function() {
           it('will be able to activate same day in next week', function() {
             triggerKeyDown(element, 'down');
             expect(getActiveLabel()).toBe('07');
-            expect(getTitle()).toBe('October 2010');
+            expect(getTitle()).toBe('OCTOBER 2010');
           });
 
           it('will be able to activate same date in previous month', function() {
             triggerKeyDown(element, 'pageup');
             expect(getActiveLabel()).toBe('30');
-            expect(getTitle()).toBe('August 2010');
+            expect(getTitle()).toBe('AUGUST 2010');
           });
 
           it('will be able to activate same date in next month', function() {
             triggerKeyDown(element, 'pagedown');
             expect(getActiveLabel()).toBe('30');
-            expect(getTitle()).toBe('October 2010');
+            expect(getTitle()).toBe('OCTOBER 2010');
           });
 
           it('will be able to activate first day of the month', function() {
             triggerKeyDown(element, 'home');
             expect(getActiveLabel()).toBe('01');
-            expect(getTitle()).toBe('September 2010');
+            expect(getTitle()).toBe('SEPTEMBER 2010');
           });
 
           it('will be able to activate last day of the month', function() {
@@ -683,19 +683,19 @@ describe('datepicker', function() {
 
             triggerKeyDown(element, 'end');
             expect(getActiveLabel()).toBe('30');
-            expect(getTitle()).toBe('September 2010');
+            expect(getTitle()).toBe('SEPTEMBER 2010');
           });
 
           it('will be able to move to month mode', function() {
             triggerKeyDown(element, 'up', true);
-            expect(getActiveLabel()).toBe('September');
+            expect(getActiveLabel()).toBe('SEPTEMBER');
             expect(getTitle()).toBe('2010');
           });
 
           it('will not respond when trying to move to lower mode', function() {
             triggerKeyDown(element, 'down', true);
             expect(getActiveLabel()).toBe('30');
-            expect(getTitle()).toBe('September 2010');
+            expect(getTitle()).toBe('SEPTEMBER 2010');
           });
         });
 
@@ -706,45 +706,45 @@ describe('datepicker', function() {
 
           it('will be able to activate previous month', function() {
             triggerKeyDown(element, 'left');
-            expect(getActiveLabel()).toBe('August');
+            expect(getActiveLabel()).toBe('AUGUST');
           });
 
           it('will be able to activate next month', function() {
             triggerKeyDown(element, 'right');
-            expect(getActiveLabel()).toBe('October');
+            expect(getActiveLabel()).toBe('OCTOBER');
           });
 
           it('will be able to activate same month in previous row', function() {
             triggerKeyDown(element, 'up');
-            expect(getActiveLabel()).toBe('June');
+            expect(getActiveLabel()).toBe('JUNE');
           });
 
           it('will be able to activate same month in next row', function() {
             triggerKeyDown(element, 'down');
-            expect(getActiveLabel()).toBe('December');
+            expect(getActiveLabel()).toBe('DECEMBER');
           });
 
           it('will be able to activate same date in previous year', function() {
             triggerKeyDown(element, 'pageup');
-            expect(getActiveLabel()).toBe('September');
+            expect(getActiveLabel()).toBe('SEPTEMBER');
             expect(getTitle()).toBe('2009');
           });
 
           it('will be able to activate same date in next year', function() {
             triggerKeyDown(element, 'pagedown');
-            expect(getActiveLabel()).toBe('September');
+            expect(getActiveLabel()).toBe('SEPTEMBER');
             expect(getTitle()).toBe('2011');
           });
 
           it('will be able to activate first month of the year', function() {
             triggerKeyDown(element, 'home');
-            expect(getActiveLabel()).toBe('January');
+            expect(getActiveLabel()).toBe('JANUARY');
             expect(getTitle()).toBe('2010');
           });
 
           it('will be able to activate last month of the year', function() {
             triggerKeyDown(element, 'end');
-            expect(getActiveLabel()).toBe('December');
+            expect(getActiveLabel()).toBe('DECEMBER');
             expect(getTitle()).toBe('2010');
           });
 
@@ -757,14 +757,14 @@ describe('datepicker', function() {
           it('will be able to move to day mode', function() {
             triggerKeyDown(element, 'down', true);
             expect(getActiveLabel()).toBe('30');
-            expect(getTitle()).toBe('September 2010');
+            expect(getTitle()).toBe('SEPTEMBER 2010');
           });
 
           it('will move to day mode when selecting', function() {
             triggerKeyDown(element, 'left', true);
             triggerKeyDown(element, 'enter', true);
             expect(getActiveLabel()).toBe('30');
-            expect(getTitle()).toBe('August 2010');
+            expect(getTitle()).toBe('AUGUST 2010');
             expect($rootScope.date).toEqual(JSJoda.LocalDate.parse('2010-09-30'));
           });
         });
@@ -822,14 +822,14 @@ describe('datepicker', function() {
 
           it('will be able to move to month mode', function() {
             triggerKeyDown(element, 'down', true);
-            expect(getActiveLabel()).toBe('September');
+            expect(getActiveLabel()).toBe('SEPTEMBER');
             expect(getTitle()).toBe('2010');
           });
 
           it('will move to month mode when selecting', function() {
             triggerKeyDown(element, 'left', true);
             triggerKeyDown(element, 'enter', true);
-            expect(getActiveLabel()).toBe('September');
+            expect(getActiveLabel()).toBe('SEPTEMBER');
             expect(getTitle()).toBe('2009');
             expect($rootScope.date).toEqual(JSJoda.LocalDate.parse('2010-09-30'));
           });
@@ -1174,7 +1174,7 @@ describe('datepicker', function() {
         });
 
         it('changes the title format in `day` mode', function() {
-          expect(getTitle()).toBe('September, 10');
+          expect(getTitle()).toBe('SEPTEMBER, 10');
         });
 
         it('changes the title & months format in `month` mode', function() {
@@ -1377,7 +1377,7 @@ describe('datepicker', function() {
       //     element = $compile('<div uib-datepicker ng-model="date" datepicker-options="options"></div>')($rootScope);
       //     $rootScope.$digest();
 
-      //     expect(getTitle()).toEqual('January 2006');
+      //     expect(getTitle()).toEqual('JANUARY 2006');
       //   });
 
       //   it('min date', function() {
@@ -1520,7 +1520,7 @@ describe('datepicker', function() {
       }));
 
       it('does not move above it', function() {
-        expect(getTitle()).toBe('August 2013');
+        expect(getTitle()).toBe('AUGUST 2013');
         clickTitleButton();
         expect(getTitle()).toBe('2013');
         clickTitleButton();
@@ -1547,12 +1547,12 @@ describe('datepicker', function() {
       });
 
       it('updates current mode if necessary', function() {
-        expect(getTitle()).toBe('August 2013');
+        expect(getTitle()).toBe('AUGUST 2013');
         clickTitleButton();
         expect(getTitle()).toBe('2013');
         $rootScope.options.maxMode = 'day';
         $rootScope.$digest();
-        expect(getTitle()).toBe('August 2013');
+        expect(getTitle()).toBe('AUGUST 2013');
       });
     });
 
@@ -1626,7 +1626,7 @@ describe('datepicker', function() {
         });
       });
 
-      describe('first week in january', function() {
+      describe('first week in JANUARY', function() {
         it('in current year', function() {
           $rootScope.date = JSJoda.LocalDate.parse('2014-01-07');
           element = $compile('<div uib-datepicker ng-model="date"></div>')($rootScope);
@@ -1644,7 +1644,7 @@ describe('datepicker', function() {
         });
       });
 
-      describe('last week(s) in december', function() {
+      describe('last week(s) in DECEMBER', function() {
         beforeEach(inject(function() {
           $rootScope.date = JSJoda.LocalDate.parse('2014-01-07');
         }));

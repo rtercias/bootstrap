@@ -267,10 +267,11 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
   $scope.move = function(direction) {
     if (self.step.years) {
-      self.activeDate = self.activeDate.plusYears(direction);
+      self.activeDate = self.activeDate.plusYears(direction * (self.step.years));
     } else if (self.step.months) {
-      self.activeDate = self.activeDate.plusMonths(direction).with(JSJoda.TemporalAdjusters.lastDayOfMonth());
+      self.activeDate = self.activeDate.plusMonths(direction * (self.step.months)).with(JSJoda.TemporalAdjusters.lastDayOfMonth());
     }
+    
     self.refreshView();
   };
 
@@ -371,7 +372,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
   }
 
   function getLabel(date, format) {
-    if (format === this.formatMonth) {
+    if (format === self.formatMonth) {
       return date.month().toString();
     }
     return date.format(JSJoda.DateTimeFormatter.ofPattern(format));
@@ -459,25 +460,27 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
   this.handleKeyDown = function(key, evt) {
     var date = this.activeDate.dayOfMonth();
-
+    var days = 0;
     if (key === 'left') {
-      date = date - 1;
+      days = -1;
     } else if (key === 'up') {
-      date = date - 7;
+      days = -7;
     } else if (key === 'right') {
-      date = date + 1;
+      days = 1;
     } else if (key === 'down') {
-      date = date + 7;
+      days = 7;
     } else if (key === 'pageup' || key === 'pagedown') {
-      var month = this.activeDate.month() + (key === 'pageup' ? - 1 : 1);
-      this.activeDate = this.activeDate.withMonth(month).withDayOfMonth(1);
-      date = Math.min(this.activeDate.lengthOfMonth(), date);
+      var month = key === 'pageup' ? - 1 : 1;
+      this.activeDate = this.activeDate.plusMonths(month);
+      days = 0;
     } else if (key === 'home') {
-      date = 1;
+      this.activeDate = this.activeDate.withDayOfMonth(1);
+      days = 0;
     } else if (key === 'end') {
-      date = this.activeDate.lengthOfMonth();
+      this.activeDate = this.activeDate.with(JSJoda.TemporalAdjusters.lastDayOfMonth());
+      days = 0;
     }
-    this.activeDate.withDayOfMonth(date);
+    this.activeDate = this.activeDate.plusDays(days);
   };
 }])
 
@@ -496,13 +499,13 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
         date;
 
     for (var i = 0; i < 12; i++) {
-      date = this.activeDate.withYear(year);
+      date = this.activeDate.withYear(year).withMonth(i+1);
       months[i] = angular.extend(this.createDateObject(date, this.formatMonth), {
         uid: scope.uniqueId + '-' + i
       });
     }
 
-    scope.title = this.activeDate.month().toString();
+    scope.title = this.activeDate.year().toString();
     scope.rows = this.split(months, this.monthColumns);
     scope.yearHeaderColspan = this.monthColumns > 3 ? this.monthColumns - 2 : 1;
   };
@@ -513,24 +516,29 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
   this.handleKeyDown = function(key, evt) {
     var date = this.activeDate.month();
+    var month = 0;
 
     if (key === 'left') {
-      date = date - 1;
+      month = -1;
     } else if (key === 'up') {
-      date = date - this.monthColumns;
+      month = -this.monthColumns;
     } else if (key === 'right') {
-      date = date + 1;
+      month = 1;
     } else if (key === 'down') {
-      date = date + this.monthColumns;
+      month = this.monthColumns;
     } else if (key === 'pageup' || key === 'pagedown') {
-      var year = this.activeDate.year() + (key === 'pageup' ? - 1 : 1);
-      this.activeDate.withYear(year);
+      var year = this.activeDate.year() + (key === 'pageup' ? - 1 : 1);      
+      this.activeDate = this.activeDate.plusYears(key === 'pageup' ? - 1 : 1);
+      month = 0;
     } else if (key === 'home') {
-      date = 0;
+      this.activeDate = this.activeDate.withMonth(1);
+      month = 0;
     } else if (key === 'end') {
-      date = 11;
+      this.activeDate = this.activeDate.withMonth(12);
+      month = 0;
     }
-    this.activeDate.withMonth(date);
+
+    this.activeDate = this.activeDate.plusMonths(month);
   };
 }])
 
@@ -557,6 +565,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
         uid: scope.uniqueId + '-' + i
       });
     }
+    
     scope.title = [years[0].label, years[range - 1].label].join(' - ');
     scope.rows = this.split(years, columns);
     scope.columns = columns;
@@ -568,23 +577,27 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
   this.handleKeyDown = function(key, evt) {
     var date = this.activeDate.year();
+    var year = 0;
 
     if (key === 'left') {
-      date = date - 1;
+      year = -1;
     } else if (key === 'up') {
-      date = date - columns;
+      year = -columns;
     } else if (key === 'right') {
-      date = date + 1;
+      year = 1;
     } else if (key === 'down') {
-      date = date + columns;
+      year = columns;
     } else if (key === 'pageup' || key === 'pagedown') {
-      date += (key === 'pageup' ? - 1 : 1) * range;
+      this.activeDate = this.activeDate.plusYears((key === 'pageup' ? - 1 : 1) * range);
+      year = 0;
     } else if (key === 'home') {
-      date = getStartingYear(this.activeDate.year());
+      this.activeDate = this.activeDate.withYear(getStartingYear(this.activeDate.year()));
+      year = 0;
     } else if (key === 'end') {
-      date = getStartingYear(this.activeDate.year()) + range - 1;
+      this.activeDate = this.activeDate.withYear( getStartingYear(this.activeDate.year()) + range - 1);
+      year = 0;
     }
-    this.activeDate.withYear(date);
+    this.activeDate = this.activeDate.plusYears(year);
   };
 }])
 
