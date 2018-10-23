@@ -102,9 +102,14 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       case 'maxDate':
       case 'minDate':
         $scope.$watch('datepickerOptions.' + key, function(value) {
-          if (value) {
+          if (value && typeof value === 'string') {
             self[key] = JSJoda.LocalDate.parse(value);
+          }
+          else if (value && value instanceof JSJoda.LocalDate) {
+            self[key] = value;
           } else {
+            if (datepickerConfig[key]) {
+            }
             self[key] = datepickerConfig[key] ?
               JSJoda.LocalDate.parse(datepickerConfig[key]) :
               null;
@@ -232,10 +237,11 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
   };
 
   this.isDisabled = function(date) {
-    return $scope.disabled ||
-      this.minDate && this.compare(date, this.minDate) < 0 ||
-      this.maxDate && this.compare(date, this.maxDate) > 0 ||
+    var value = $scope.disabled ||
+      this.minDate && date.isBefore(this.minDate) ||
+      this.maxDate && date.isAfter(this.maxDate) ||
       $scope.dateDisabled && $scope.dateDisabled({date: date, mode: $scope.datepickerMode});
+    return value;
   };
 
   this.customClass = function(date) {
@@ -453,6 +459,8 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
   this.compare = function(date1, date2) {
     return date1.compareTo(date2);
   };
+
+  this.is
 
   function getISO8601WeekNumber(date) {
     return date.isoWeekOfWeekyear();
