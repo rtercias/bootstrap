@@ -1,6 +1,6 @@
 angular.module('ui.bootstrap.demo').controller('DatepickerDemoCtrl', function ($scope) {
   $scope.today = function() {
-    $scope.dt = new Date();
+    $scope.dt = JSJoda.LocalDate.now();
   };
   $scope.today();
 
@@ -28,13 +28,12 @@ angular.module('ui.bootstrap.demo').controller('DatepickerDemoCtrl', function ($
   $scope.toggleMin();
 
   $scope.setDate = function(year, month, day) {
-    $scope.dt = new Date(year, month, day);
+    $scope.dt = JSJoda.LocalDate.of(year, month, day);
   };
 
-  var tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  var afterTomorrow = new Date(tomorrow);
-  afterTomorrow.setDate(tomorrow.getDate() + 1);
+  var today = JSJoda.LocalDate.now();
+  var tomorrow = today.withDayOfMonth(today.dayOfMonth() + 1);
+  var afterTomorrow = tomorrow.plusDays(1);
   $scope.events = [
     {
       date: tomorrow,
@@ -50,10 +49,10 @@ angular.module('ui.bootstrap.demo').controller('DatepickerDemoCtrl', function ($
     var date = data.date,
       mode = data.mode;
     if (mode === 'day') {
-      var dayToCheck = new Date(date).setHours(0,0,0,0);
+      var dayToCheck = date;
 
       for (var i = 0; i < $scope.events.length; i++) {
-        var currentDay = new Date($scope.events[i].date).setHours(0,0,0,0);
+        var currentDay = $scope.events[i].date;
 
         if (dayToCheck === currentDay) {
           return $scope.events[i].status;
